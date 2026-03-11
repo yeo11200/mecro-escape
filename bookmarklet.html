@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>키이스케이프 예약 매크로 - 북마클릿</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background: #1a1a2e; color: #eee; }
+    h1 { color: #e94560; }
+    h2 { color: #0f3460; background: #e94560; padding: 8px 16px; border-radius: 6px; margin-top: 40px; }
+    .step { background: #16213e; border: 1px solid #0f3460; border-radius: 10px; padding: 20px; margin: 16px 0; }
+    .bookmarklet-link { display: inline-block; background: #e94560; color: #fff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-size: 18px; font-weight: bold; cursor: grab; margin: 10px 0; }
+    .bookmarklet-link:hover { background: #c23152; }
+    .config { background: #0f3460; padding: 16px; border-radius: 8px; margin: 12px 0; font-family: monospace; font-size: 14px; white-space: pre-wrap; word-break: break-all; }
+    .warning { background: #ff6b35; color: #000; padding: 12px; border-radius: 6px; font-weight: bold; }
+    .arrow { font-size: 32px; text-align: center; color: #e94560; }
+    ol { line-height: 2; }
+    code { background: #0f3460; padding: 2px 6px; border-radius: 4px; }
+    .edit-section { background: #1e3a5f; border: 2px dashed #e94560; padding: 16px; border-radius: 8px; margin: 16px 0; }
+    .edit-section label { display: block; margin: 8px 0 4px; color: #e94560; font-weight: bold; }
+    .edit-section input, .edit-section select { padding: 8px; border-radius: 4px; border: 1px solid #0f3460; background: #16213e; color: #eee; font-size: 14px; width: 300px; }
+    button { background: #e94560; color: #fff; border: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; }
+    button:hover { background: #c23152; }
+  </style>
+</head>
+<body>
+
+<h1>키이스케이프 예약 매크로</h1>
+<p>개발자 도구 없이 북마크 클릭만으로 실행!</p>
+
+<div class="warning">
+  ⚠️ 아래 설정을 먼저 수정한 후 "북마클릿 생성" 버튼을 누르세요.
+</div>
+
+<!-- 설정 입력 -->
+<h2>1. 설정</h2>
+<div class="edit-section">
+  <label>지점</label>
+  <select id="cfg_branch">
+    <option value="3">강남점</option>
+    <option value="10">홍대점</option>
+    <option value="9">부산점</option>
+    <option value="7">전주점</option>
+    <option value="14">강남 더오름</option>
+    <option value="26">에버랜드</option>
+    <option value="23">후즈데어</option>
+    <option value="22">STATION</option>
+    <option value="19">LOG_IN 1</option>
+    <option value="20">LOG_IN 2</option>
+    <option value="18">메모리컴퍼니</option>
+    <option value="16">우주라이크</option>
+  </select>
+
+  <label>테마 번호</label>
+  <input id="cfg_theme" type="text" value="1">
+
+  <label>테마 정보 번호</label>
+  <input id="cfg_theme_info" type="text" value="1">
+
+  <label>예약 날짜 (YYYY-MM-DD)</label>
+  <input id="cfg_date" type="text" value="2026-03-15">
+
+  <label>희망 시간 (쉼표로 구분, 우선순위순)</label>
+  <input id="cfg_times" type="text" value="18:00,19:00,20:00,17:00">
+
+  <label>이름</label>
+  <input id="cfg_name" type="text" value="홍길동">
+
+  <label>전화번호 (- 없이)</label>
+  <input id="cfg_phone" type="text" value="01012345678">
+
+  <br><br>
+  <button onclick="generateBookmarklets()">북마클릿 생성</button>
+</div>
+
+<!-- 생성된 북마클릿 -->
+<div id="bookmarklet_area" style="display:none;">
+
+  <h2>2. 북마클릿 등록</h2>
+  <div class="step">
+    <p>아래 버튼들을 <strong>북마크바로 드래그</strong>하세요:</p>
+    <p id="bm_step1_container"></p>
+    <p id="bm_step2_container"></p>
+    <p style="color: #aaa; font-size: 13px;">
+      드래그가 안 되면: 북마크바 우클릭 → "페이지 추가" → 이름 입력 → URL에 아래 코드를 복사/붙여넣기
+    </p>
+    <details>
+      <summary style="cursor:pointer; color: #e94560;">Step 1 코드 보기 (복사용)</summary>
+      <div class="config" id="code_step1"></div>
+    </details>
+    <details>
+      <summary style="cursor:pointer; color: #e94560;">Step 2 코드 보기 (복사용)</summary>
+      <div class="config" id="code_step2"></div>
+    </details>
+  </div>
+
+  <h2>3. 사용법</h2>
+  <div class="step">
+    <ol>
+      <li>브라우저에서 예약 페이지 접속: <code id="res_url"></code></li>
+      <li>오픈 시간에 북마크바의 <strong>[STEP 1]</strong> 클릭</li>
+      <li class="arrow">↓ 자동으로 reservation2.php 이동 ↓</li>
+      <li>북마크바의 <strong>[STEP 2]</strong> 클릭</li>
+      <li class="arrow">↓ 이름/전화/동의 자동 입력 ↓</li>
+      <li>🔲 <strong>reCAPTCHA "로봇이 아닙니다" 클릭</strong></li>
+      <li>🔴 <strong>예약하기 버튼 클릭</strong></li>
+    </ol>
+  </div>
+</div>
+
+<script>
+function generateBookmarklets() {
+  const branch = document.getElementById("cfg_branch").value;
+  const theme = document.getElementById("cfg_theme").value;
+  const themeInfo = document.getElementById("cfg_theme_info").value;
+  const date = document.getElementById("cfg_date").value;
+  const times = document.getElementById("cfg_times").value;
+  const name = document.getElementById("cfg_name").value;
+  const phone = document.getElementById("cfg_phone").value;
+
+  const timesArr = JSON.stringify(times.split(",").map(t => t.trim()));
+
+  // Step 1 bookmarklet
+  const step1Code = `javascript:void((async()=>{const t0=performance.now();const C={z:"${branch}",t:"${theme}",ti:"${themeInfo}",d:"${date}",pt:${timesArr}};const r=await fetch("/controller/run_proc.php",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded","X-Requested-With":"XMLHttpRequest"},body:"t=get_theme_time&date="+C.d+"&zizumNum="+C.z+"&themeNum="+C.t+"&endDay="});const j=await r.json();const L=Array.isArray(j)?j:(j.data||[]);let s=null;for(const p of C.pt){s=L.find(i=>(i.time||i.rev_time||"").includes(p)&&i.enable!=="N");if(s)break}if(!s){alert("희망시간 모두 마감!\\n"+L.map(x=>(x.time||x.rev_time)+"("+x.enable+")").join(","));return}const f=document.querySelector("#form")||document.querySelector("form");if(!f){alert("폼 없음!");return}const S=(n,v)=>{let i=f.querySelector("input[name='"+n+"']");if(!i){i=document.createElement("input");i.type="hidden";i.name=n;f.appendChild(i)}i.value=v};S("zizumNum",C.z);S("themeNum",C.t);S("themeInfoNum",C.ti);S("revDays",C.d);S("themeTimeNum",s.num);S("revTimes",s.time||s.rev_time||"");S("themeName","");alert("선택: "+(s.time||s.rev_time)+" ("+Math.round(performance.now()-t0)+"ms)\\n확인 누르면 제출!");f.submit()})())`;
+
+  // Step 2 bookmarklet
+  const step2Code = `javascript:void(((N,P)=>{const q=(s)=>document.querySelector(s);const fill=(sels,val)=>{for(const s of sels.split(",")){const el=q(s);if(el){el.value=val;el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));return true}}return false};fill("input[name='name'],input[name='rev_name'],input[name='userName'],input[name='r_name'],input[placeholder*='이름']","${name}");fill("input[name='phone'],input[name='rev_phone'],input[name='hp'],input[name='tel'],input[name='r_phone'],input[placeholder*='전화'],input[type='tel']","${phone}");const cbs=document.querySelectorAll("input[type='checkbox']");cbs.forEach(c=>{if(!c.checked&&!c.closest(".g-recaptcha")&&c.id!=="recaptcha")c.click()});alert("자동입력 완료!\\n→ reCAPTCHA 체크 → 예약하기 클릭")})("${name}","${phone}"))`;
+
+  // Display
+  document.getElementById("bookmarklet_area").style.display = "block";
+
+  const bm1 = document.getElementById("bm_step1_container");
+  bm1.innerHTML = `<a class="bookmarklet-link" href='${step1Code}'>⚡ STEP 1: 시간선점</a>`;
+
+  const bm2 = document.getElementById("bm_step2_container");
+  bm2.innerHTML = `<a class="bookmarklet-link" href='${step2Code}'>📝 STEP 2: 자동입력</a>`;
+
+  document.getElementById("code_step1").textContent = step1Code;
+  document.getElementById("code_step2").textContent = step2Code;
+  document.getElementById("res_url").textContent =
+    `keyescape.com/reservation1.php?zizum_num=${branch}&theme_num=${theme}&theme_info_num=${themeInfo}`;
+}
+</script>
+
+</body>
+</html>
